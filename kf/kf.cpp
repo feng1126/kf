@@ -8,6 +8,7 @@
 #include "UTMTran.h"
 #include "matplotlibcpp.h"
 #include <algorithm>
+#include "enu.h"
 
 std::vector<std::string> splitWithSymbol(const std::string& strs, const std::string& splitWithSymbol)
 {
@@ -155,11 +156,47 @@ int main()
 
 
 #else
+
+double* ecefToEnu(double x, double y, double z, double lat, double lng, double height)
+{
+	double a = 6378137;
+	double b = 6356752.3142;
+	double f = (a - b) / a;
+	double e_sq = f * (2 - f);
+	double lamb = lat;
+	double phi =lng;
+	double s = std::sin(lamb);
+	double N = a / std::sqrt(1 - e_sq * s * s);
+	double sin_lambda = std::sin(lamb);
+	double cos_lambda = std::cos(lamb);
+	double sin_phi = std::sin(phi);
+	double cos_phi = std::cos(phi);
+
+	double x0 = (height + N) * cos_lambda * cos_phi;
+	double y0 = (height + N) * cos_lambda * sin_phi;
+	double z0 = (height + (1 - e_sq) * N) * sin_lambda;
+
+	double xd = x - x0;
+	double yd = y - y0;
+	double zd = z - z0;
+
+	double t = -cos_phi * xd - sin_phi * yd;
+
+	double xEast = -sin_phi * xd + cos_phi * yd;
+	double yNorth = t * sin_lambda + cos_lambda * zd;
+	double zUp = cos_lambda * cos_phi * xd + cos_lambda * sin_phi * yd + sin_lambda * zd;
+	printf("enu 2:%lf,%lf,%lf \n", xEast, yNorth, zUp);
+	return new double[] { xEast, yNorth, zUp };
+}
+
+
+
+
 int main()
 {
 
 	std::ifstream m_file_in;
-	std::string LogFile = "C:\\Users\\niew\\Desktop\\MPUlog\\e1.log";
+	std::string LogFile = "C:\\Users\\niew\\Desktop\\MPUlog\\e3.log";
 	//std::string LogFile = "C:\\Users\\niew\\Desktop\\MPUlog\\rtk4.txt";
 	m_file_in.open(LogFile.c_str());
 	std::string strs;
@@ -175,6 +212,10 @@ int main()
 	ekfOut.open(LogFile.c_str());
 	bool init = false;
 	int count = 0;
+	ENU mENU;
+	
+
+	double ecef_ref[3], lla_ref[3];
 	while (std::getline(m_file_in, strs))
 	{
 		std::vector<std::string>  data = splitWithSymbol(strs, ":");
@@ -200,7 +241,8 @@ int main()
 			filterObserve_data->timestamp = timestamp;
 			double utm_x, utm_y;
 			tool_t::UTMTransform::instance()->LLToUTM(lat, lon, utm_x, utm_y);
-			filterObserve_data->UTM = Eigen::Vector3d(utm_x, utm_y, 0);
+			filterObserve_data->UTM = Eigen::Vector3d(utm_x, utm_y, alt);
+			filterObserve_data->LLA = Eigen::Vector3d(lat, lon, alt);
 			filterObserve_data->YPR = Eigen::Vector3d(heading, 0, 0);
 			filterObserve_data->Vehicle = Eigen::Vector3d(stod(logData[9]), 0, 0);
 			filterObserve_data->cov = Eigen::Vector4d(stod(logData[10]), stod(logData[11]), stod(logData[12]), stod(logData[13]));
@@ -210,13 +252,18 @@ int main()
 			{
 				filterObserves.push_back(filterObserve_data);
 				count = 0;
-			}		
+			}	
+
 			tool_t::UTMTransform::instance()->LLToUTM(lat, lon, utmX, utmY);
+
+			double enu[3];
+
 			if (!init)
 			{
 				shitx = utmX;
 				shity = utmY;
 				init = true;
+				mENU.setStart(lat, lon, alt);
 			}
 			else
 			{
@@ -228,6 +275,11 @@ int main()
 				//y1.push_back(lon);
 
 			}
+			//double *enuout = mENU.getENU(lat, lon, alt);
+			//printf("enuout:%.7f,%.7f,%lf \n", enuout[0], enuout[1], enuout[2]);
+			//double* llaout = mENU.getLLA(enuout[0], enuout[1], enuout[2]);
+			//printf("llaout:%.7f,%.7f,%lf \n", llaout[0], llaout[1], llaout[2]);
+
 			if (heading < 0) heading = heading + 2 * EIGEN_PI;
 			m_out << std::to_string(timestamp) << "," << std::to_string(lat) << "," << std::to_string(lon) << "," << std::to_string(heading) << std::endl;
 
@@ -277,12 +329,12 @@ int main()
 			if (filterObserves[i]->id != 0) continue;
 			init = true;
 		}
-		if (i > 1)
-		{
-			double time = filterObserves[i]->timestamp - filterObserves[i - 1]->timestamp;
+		//if (i > 1)
+		//{
+		//	double time = filterObserves[i]->timestamp - filterObserves[i - 1]->timestamp;
 			//std::cout << "dt : " << time << std::endl;
-			dtVector.push_back(time);
-		}
+		//	dtVector.push_back(time);
+		//}
 
 			
 		double timestamp, lat, lon, yaw;
@@ -303,9 +355,9 @@ int main()
 	}
 	std::cout << filterObserves.size() << std::endl;
 	std::cout << "EKF "<< count <<  "in size " << x1.size() << " out size " << x2.size() << std::endl;
-	std::sort(dtVector.begin(), dtVector.end());
-	std::cout << dtVector[dtVector.size() - 1] << std::endl;;
-	std::cout << dtVector[0] << std::endl;;
+	//std::sort(dtVector.begin(), dtVector.end());
+	//std::cout << dtVector[dtVector.size() - 1] << std::endl;;
+	//std::cout << dtVector[0] << std::endl;;
 	// Set the size of output image to 1200x780 pixels
 	plt::figure_size(1200, 780);
 	// Plot line from given x and y data. Color is selected automatically.

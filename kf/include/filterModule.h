@@ -62,7 +62,7 @@ namespace filter
 
 #endif
         filterQueue* pfilterQueue;
-        filterBase* pfilter;
+        filterEKF* pfilter;
         MeasurementPtr mInitialMessage;
         bool bvalidInitial;
         Eigen::Isometry3d mOdometryInv;

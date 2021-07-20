@@ -85,7 +85,9 @@ namespace filter
 
     void filterBase::wrapStateAngles()
     {
-        mState(mStateMemberYaw) = clampRotation(mState(mStateMemberYaw));
+        mState(StateMemberYaw) = clampRotation(mState(StateMemberYaw));
+        mState(StateMemberPitch) = clampRotation(mState(StateMemberPitch));
+        mState(StateMemberRoll) = clampRotation(mState(StateMemberRoll));
     }
 
     //卡尔曼滤波算法系统初始化

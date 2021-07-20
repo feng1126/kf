@@ -24,6 +24,7 @@ namespace filter
         int id = 0;
         double timestamp = 0.0f;
         Eigen::Vector3d UTM;
+        Eigen::Vector3d LLA;
         Eigen::Vector3d Vehicle;
         Eigen::Vector3d YPR;
         Eigen::Vector4d cov;
@@ -59,5 +60,25 @@ namespace filter
 	Eigen::Vector3d ToEulerAngles(const Eigen::Quaterniond &q);
 	
 }
+
+
+enum StateMembers
+{
+    StateMemberX = 0,
+    StateMemberY,
+    StateMemberZ,
+    StateMemberYaw,
+    StateMemberPitch,
+    StateMemberRoll,
+    StateMemberVx,
+    StateMemberVy,
+    StateMemberVz,
+    StateMemberVroll,
+    StateMemberVpitch,
+    StateMemberVyaw,
+    StateMemberAx,
+    StateMemberAy,
+    StateMemberAz
+};
 
 #endif

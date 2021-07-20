@@ -39,6 +39,9 @@
     <ClCompile Include="src\UTMTran.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="src\enu.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="include\filterBase.h">
@@ -63,6 +66,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="matplotlibcpp.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="include\enu.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

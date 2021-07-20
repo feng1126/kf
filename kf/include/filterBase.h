@@ -48,10 +48,10 @@ namespace filter
         //卡尔曼滤波算法获取滤波后的状态变量
 		const Eigen::VectorXd  GetCarPostion() { return mState; };
         //卡尔曼滤波算法获取滤波后的状态变量
-        const int getStateX() { return mStateMemberX; };
+        /*const int getStateX() { return mStateMemberX; };
         const int getStateY() { return mStateMemberY; };
         const int getStateYaw() { return mStateMemberYaw; };
-        const int getStateVx() { return mStateMemberVx; };
+        const int getStateVx() { return mStateMemberVx; };*/
         const int getStateSize() { return mStateSize; };
         //卡尔曼滤波算法获取系统的初始化坐标系
         const Eigen::Isometry3d GetOdometry() { return mOdometry; };
@@ -82,21 +82,7 @@ namespace filter
         Eigen::Isometry3d  mOdometry;
         Eigen::Isometry3d  mOdometryInv;
         int  mStateSize;
-        int  mStateMemberX;
-        int  mStateMemberY;
-        int  mStateMemberZ;
-        int  mStateMemberRoll;
-        int  mStateMemberPitch;
-        int  mStateMemberYaw;
-        int  mStateMemberVx;
-        int  mStateMemberVy;
-        int  mStateMemberVz;
-        int  mStateMemberVroll;
-        int  mStateMemberVpitch;
-        int  mStateMemberVyaw;
-        int  mStateMemberAccX;
-        int  mStateMemberAccY;
-        int  mStateMemberAccZ;
+
         float m_steer_angle;
     };
 }

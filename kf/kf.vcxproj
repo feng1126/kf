@@ -79,7 +79,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>D:\vs_project\kf\eigen;D:\vs_project\kf\kf\include;$(IncludePath)</IncludePath>
+    <IncludePath>C:\Python\Python39\Lib\site-packages\numpy\core\include;C:\Python\Python39\include;D:\vs_project\kf\eigen;D:\vs_project\kf\kf\include;$(IncludePath)</IncludePath>
+    <LibraryPath>C:\Python\Python39\libs;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -143,6 +144,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="kf.cpp" />
+    <ClCompile Include="src\enu.cpp" />
     <ClCompile Include="src\filterBase.cpp" />
     <ClCompile Include="src\filterCommon.cpp" />
     <ClCompile Include="src\filterEKF.cpp" />
@@ -152,6 +154,7 @@
     <ClCompile Include="src\UTMTran.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="include\enu.h" />
     <ClInclude Include="include\filterBase.h" />
     <ClInclude Include="include\filterCommon.h" />
     <ClInclude Include="include\filterEKF.h" />

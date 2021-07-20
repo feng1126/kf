@@ -16,10 +16,6 @@ namespace filter
 		pfilterQueue = new filterQueue();
 		pfilter = new filterEKF();
 		mInitialMessage = std::make_shared<filterMessage>();
-		mStateMemberX = pfilter->getStateX();
-		mStateMemberY = pfilter->getStateY();
-		mStateMemberYaw = pfilter->getStateYaw();
-		mStateMemberVx = pfilter->getStateVx();
 		mStateSize = pfilter->getStateSize();
 		bvalidInitial = false;
 	}
@@ -37,21 +33,25 @@ namespace filter
 		message->timestamp = timeStamp;
 		message->v_observation.resize(mStateSize);
 		message->v_observation.setZero();
-		message->v_observation[mStateMemberX] = position[0];
-		message->v_observation[mStateMemberY] = position[1];
-		message->v_observation[mStateMemberYaw] = YPR[0];
-		message->v_observation[mStateMemberVx] = Vehicle[0];
+		message->v_observation[StateMemberX] = position[0];
+		message->v_observation[StateMemberY] = position[1];
+		message->v_observation[StateMemberYaw] = YPR[0];
+		message->v_observation[StateMemberVx] = Vehicle[0];
 		message->v_flag.resize(mStateSize, 0);
-		message->v_flag[mStateMemberX] = 1;
-		message->v_flag[mStateMemberY] = 1;
-		message->v_flag[mStateMemberYaw] = 1;
-		message->v_flag[mStateMemberVx] = 1;
+		message->v_flag[StateMemberX] = 1;
+		message->v_flag[StateMemberY] = 1;
+		message->v_flag[StateMemberZ] = 1;
+		message->v_flag[StateMemberYaw] = 1;
+		message->v_flag[StateMemberPitch] = 1;
+		message->v_flag[StateMemberRoll] = 1;
 		message->m_convariance.resize(mStateSize, mStateSize);
 		message->m_convariance.setZero();
-		message->m_convariance(mStateMemberX, mStateMemberX) = cov[0] ;
-		message->m_convariance(mStateMemberY, mStateMemberY) = cov[1];
-		message->m_convariance(mStateMemberYaw, mStateMemberYaw) = cov[2] * EIGEN_PI /180.0;
-		message->m_convariance(mStateMemberVx, mStateMemberVx) = cov[3] ;
+		message->m_convariance(StateMemberX, StateMemberX) = cov[0] ;
+		message->m_convariance(StateMemberY, StateMemberY) = cov[1];
+		message->m_convariance(StateMemberZ, StateMemberZ) = 0.001;
+		message->m_convariance(StateMemberYaw, StateMemberYaw) = cov[2] * EIGEN_PI /180.0;
+		message->m_convariance(StateMemberPitch, StateMemberPitch) = 0.001;
+		message->m_convariance(StateMemberRoll, StateMemberRoll) = 0.001;
 		return message;
 	}
 
@@ -63,18 +63,18 @@ namespace filter
 		message->timestamp = timeStamp;
 		message->v_observation.resize(mStateSize);
 		message->v_observation.setZero();
-		message->v_observation[mStateMemberX] = position[0];
-		message->v_observation[mStateMemberY] = position[1];
-		message->v_observation[mStateMemberYaw] = YPR[0];
+		message->v_observation[StateMemberX] = position[0];
+		message->v_observation[StateMemberY] = position[1];
+		message->v_observation[StateMemberYaw] = YPR[0];
 		message->v_flag.resize(mStateSize, 0);
 		message->v_flag[mStateMemberX] = 1;
 		message->v_flag[mStateMemberY] = 1;
 		message->v_flag[mStateMemberYaw] = 1;
 		message->m_convariance.resize(mStateSize, mStateSize);
 		message->m_convariance.setZero();
-		message->m_convariance(mStateMemberX, mStateMemberX) = 0.001;
-		message->m_convariance(mStateMemberY, mStateMemberY) = 0.001;
-		message->m_convariance(mStateMemberYaw, mStateMemberYaw) = 0.001;
+		message->m_convariance(StateMemberX, StateMemberX) = 0.001;
+		message->m_convariance(StateMemberY, StateMemberY) = 0.001;
+		message->m_convariance(StateMemberYaw, StateMemberYaw) = 0.001;
 		return message;
 	}
 
@@ -84,12 +84,12 @@ namespace filter
 		message->timestamp = timeStamp;
 		message->v_observation.resize(mStateSize);
 		message->v_observation.setZero();
-		message->v_observation[mStateMemberVx] = Vehicle[0];
+		message->v_observation[StateMemberVx] = Vehicle[0];
 		message->v_flag.resize(mStateSize, 0);
-		message->v_flag[mStateMemberVx] = 1;
+		message->v_flag[StateMemberVx] = 1;
 		message->m_convariance.resize(mStateSize, mStateSize);
 		message->m_convariance.setZero();
-		message->m_convariance(mStateMemberVx, mStateMemberVx) = 0.1;
+		message->m_convariance(StateMemberVx, StateMemberVx) = 0.1;
 		return message;
 	}
 
@@ -139,7 +139,7 @@ namespace filter
 		Eigen::Vector3d curState = curOdom.head(3);
 
 		Eigen::Vector3d cur_position = curState + mOdometry.translation();
-		yaw = curOdom[mStateMemberYaw];
+		yaw = curOdom[StateMemberYaw];
 
 		tool_t::UTMTransform::instance()->UTMtoLL(cur_position[1], cur_position[0], lat, lon);
 
@@ -156,7 +156,7 @@ namespace filter
 		Eigen::Vector3d curState = curOdom.head(3);
 
 		Eigen::Vector3d cur_position = curState + mOdometry.translation();
-		yaw = curOdom[mStateMemberYaw] - 0.5 * EIGEN_PI;
+		yaw = curOdom[StateMemberYaw] - 0.5 * EIGEN_PI;
 		if (yaw < 0) yaw = yaw + 2 * EIGEN_PI;
 
 		tool_t::UTMTransform::instance()->UTMtoLL(cur_position[1], cur_position[0], lat, lon);
@@ -248,10 +248,10 @@ namespace filter
 			mInitialMessage->v_observation.resize(4);
 			mInitialMessage->v_observation.setZero();
 			mInitialMessage->timestamp = observe->timestamp;
-			mInitialMessage->v_observation[mStateMemberX] = observe->UTM[0];
-			mInitialMessage->v_observation[mStateMemberY] = observe->UTM[1];
-			mInitialMessage->v_observation[mStateMemberYaw] = observe->YPR[0];
-			mInitialMessage->v_observation[mStateMemberVx] = observe->Vehicle[0];
+			mInitialMessage->v_observation[StateMemberX] = observe->UTM[0];
+			mInitialMessage->v_observation[StateMemberY] = observe->UTM[1];
+			mInitialMessage->v_observation[StateMemberYaw] = observe->YPR[0];
+			mInitialMessage->v_observation[StateMemberVx] = observe->Vehicle[0];
 			bvalidInitial = true;
 		}
 
