@@ -64,6 +64,17 @@ namespace filter
         return mOdometryCoordinate;
     }
 
+    void filterBase::update_gps(Eigen::Vector3d pos, Eigen::Vector3d ypr, Eigen::VectorXd cov)
+    {
+    
+    
+    }
+
+    void filterBase::update_vehicle(Eigen::Vector3d vehicle)
+    {
+    
+    }
+
     Eigen::Vector3d  filterBase::GetOdometryFirstPosition()
     {
         return mFirstStatePosition;

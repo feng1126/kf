@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-02-18 13:37:00
- * @LastEditTime: 2021-07-02 14:30:17
+ * @LastEditTime: 2021-07-27 09:21:57
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \code\src\fusionalgorithm\filterModule.cpp
@@ -28,30 +28,28 @@ namespace filter
 
 	MeasurementPtr filterModule::tranform(const double& timeStamp, const Eigen::Vector3d& UTM, const Eigen::Vector3d& YPR, const Eigen::Vector3d& Vehicle, const Eigen::Vector4d& cov)
 	{
-		Eigen::Vector3d position = UTM - mOdometry.translation();
+		double a, b, c;
+		m_ENU.getENU(UTM[0], UTM[1], UTM[2], a, b, c);
 		MeasurementPtr message = std::make_shared<filterMessage>();
 		message->timestamp = timeStamp;
 		message->v_observation.resize(mStateSize);
 		message->v_observation.setZero();
-		message->v_observation[StateMemberX] = position[0];
-		message->v_observation[StateMemberY] = position[1];
+		message->v_observation[StateMemberX] = a;
+		message->v_observation[StateMemberY] = b;
+		message->v_observation[StateMemberZ] = c;
 		message->v_observation[StateMemberYaw] = YPR[0];
-		message->v_observation[StateMemberVx] = Vehicle[0];
 		message->v_flag.resize(mStateSize, 0);
+
 		message->v_flag[StateMemberX] = 1;
 		message->v_flag[StateMemberY] = 1;
 		message->v_flag[StateMemberZ] = 1;
 		message->v_flag[StateMemberYaw] = 1;
-		message->v_flag[StateMemberPitch] = 1;
-		message->v_flag[StateMemberRoll] = 1;
 		message->m_convariance.resize(mStateSize, mStateSize);
 		message->m_convariance.setZero();
-		message->m_convariance(StateMemberX, StateMemberX) = cov[0] ;
+		message->m_convariance(StateMemberX, StateMemberX) = cov[0];
 		message->m_convariance(StateMemberY, StateMemberY) = cov[1];
 		message->m_convariance(StateMemberZ, StateMemberZ) = 0.001;
-		message->m_convariance(StateMemberYaw, StateMemberYaw) = cov[2] * EIGEN_PI /180.0;
-		message->m_convariance(StateMemberPitch, StateMemberPitch) = 0.001;
-		message->m_convariance(StateMemberRoll, StateMemberRoll) = 0.001;
+		message->m_convariance(StateMemberYaw, StateMemberYaw) = cov[2] * EIGEN_PI / 180.0;
 		return message;
 	}
 
@@ -67,9 +65,9 @@ namespace filter
 		message->v_observation[StateMemberY] = position[1];
 		message->v_observation[StateMemberYaw] = YPR[0];
 		message->v_flag.resize(mStateSize, 0);
-		message->v_flag[mStateMemberX] = 1;
-		message->v_flag[mStateMemberY] = 1;
-		message->v_flag[mStateMemberYaw] = 1;
+		message->v_flag[StateMemberX] = 1;
+		message->v_flag[StateMemberY] = 1;
+		message->v_flag[StateMemberYaw] = 1;
 		message->m_convariance.resize(mStateSize, mStateSize);
 		message->m_convariance.setZero();
 		message->m_convariance(StateMemberX, StateMemberX) = 0.001;
@@ -112,70 +110,122 @@ namespace filter
 				pfilterQueue->pop_up(observe);
 				if (observe->id == 0)
 				{
-					MeasurementPtr measure = tranform(observe->timestamp, observe->UTM, observe->YPR, observe->Vehicle, observe->cov);
-					pfilter->filterProcess(measure);
+					double a, b, c;
+					m_ENU.getENU(observe->LLA[0], observe->LLA[1], observe->LLA[2], a, b, c);
+					MeasurementPtr message = std::make_shared<filterMessage>();
+					message->timestamp = observe->timestamp;
+					message->v_observation.resize(mStateSize);
+					message->v_observation.setZero();
+					message->v_observation[StateMemberX] = a;
+					message->v_observation[StateMemberY] = b;
+					message->v_observation[StateMemberZ] = c;
+					message->v_observation[StateMemberYaw] = observe->YPR[0];
+					message->v_flag.resize(mStateSize, 0);
+
+					message->v_flag[StateMemberX] = 1;
+					message->v_flag[StateMemberY] = 1;
+					message->v_flag[StateMemberZ] = 1;
+					message->v_flag[StateMemberYaw] = 1;
+					message->m_convariance.resize(mStateSize, mStateSize);
+					message->m_convariance.setZero();
+					message->m_convariance(StateMemberX, StateMemberX) = observe->cov[0];
+					message->m_convariance(StateMemberY, StateMemberY) = observe->cov[1];
+					message->m_convariance(StateMemberZ, StateMemberZ) = 0.001;
+					message->m_convariance(StateMemberYaw, StateMemberYaw) = observe->cov[2] * EIGEN_PI / 180.0;
+
+					printf("cov:%f,%f,%f \n", observe->cov[0], observe->cov[1], observe->cov[2] * EIGEN_PI / 180.0);
+					pfilter->filterProcess(message);
 				}
 				if (observe->id == 1)
 				{
-					MeasurementPtr measure = tranform(observe->timestamp, observe->UTM, observe->YPR);
-					pfilter->filterProcess(measure);
+					double a, b, c;
+					m_ENU.getENU(observe->LLA[0], observe->LLA[1], observe->LLA[2], a, b, c);
+					MeasurementPtr message = std::make_shared<filterMessage>();
+					message->timestamp = observe->timestamp;
+					message->v_observation.resize(mStateSize);
+					message->v_observation.setZero();
+					message->v_observation[StateMemberX] = a;
+					message->v_observation[StateMemberY] = b;
+					message->v_observation[StateMemberZ] = c;
+					message->v_flag.resize(mStateSize, 0);
+					message->v_flag[StateMemberX] = 1;
+					message->v_flag[StateMemberY] = 1;
+					message->v_flag[StateMemberZ] = 1;
+					message->m_convariance.resize(mStateSize, mStateSize);
+					message->m_convariance.setZero();
+					message->m_convariance(StateMemberX, StateMemberX) = observe->cov[0];
+					message->m_convariance(StateMemberY, StateMemberY) = observe->cov[1];
+					message->m_convariance(StateMemberZ, StateMemberZ) = 0.001;
+					pfilter->filterProcess(message);
 				}
 				if (observe->id == 2)
 				{
-					MeasurementPtr measure = tranform(observe->timestamp, observe->Vehicle);
-					pfilter->setSteerAngle(observe->steerAngle);
-					pfilter->filterProcess(measure);
+					MeasurementPtr message = std::make_shared<filterMessage>();
+					message->timestamp = observe->timestamp;
+					message->v_observation.resize(mStateSize);
+					message->v_observation.setZero();
+					message->v_observation[StateMemberVx] = observe->Vehicle[0];
+					message->v_flag.resize(mStateSize, 0);
+					message->v_flag[StateMemberVx] = 1;
+					message->m_convariance.resize(mStateSize, mStateSize);
+					message->m_convariance.setZero();
+					message->m_convariance(StateMemberVx, StateMemberVx) = 0.1;
+					pfilter->filterProcess(message);
 				}
 			}
 		}
 	}
 
+	void filterModule::GetOdom(double& timeStamp, double& lat, double& lon, double& yaw)
+	{
+		float hei;
+		Eigen::VectorXd curOdom = pfilter->GetCarPostion();
+		yaw = curOdom[StateMemberYaw] - 0.5 * EIGEN_PI;
+		if (yaw < 0)
+			yaw = yaw + 2 * EIGEN_PI;
+		m_ENU.getLLA(curOdom[StateMemberX], curOdom[StateMemberY], curOdom[StateMemberZ], lat, lon, hei);
+
+		timeStamp = pfilter->GetLastMeasurementTime();
+		printf("ekf_out:%lf,%.7f,%.7f,%f,%f \r\n", pfilter->GetLastMeasurementTime(), lat, lon, yaw, curOdom[StateMemberVx]);
+	}
+
+#if 0
 	void filterModule::GetOdom()
 	{
 
 		double timeStamp, lat, lon, yaw, alt;
+		float hei;
 
 		Eigen::VectorXd curOdom = pfilter->GetCarPostion();
-		Eigen::Vector3d curState = curOdom.head(3);
-
-		Eigen::Vector3d cur_position = curState + mOdometry.translation();
-		yaw = curOdom[StateMemberYaw];
-
-		tool_t::UTMTransform::instance()->UTMtoLL(cur_position[1], cur_position[0], lat, lon);
-
-		printf("ekf_out:%lf,%.7f,%.7f,%f \r\n", pfilter->GetLastMeasurementTime(), lat, lon, yaw);
-		timeStamp = pfilter->GetLastMeasurementTime();
-
-	}
-
-	void filterModule::GetOdom(double& timeStamp, double& lat, double& lon, double& yaw)
-	{
-
-
-		Eigen::VectorXd curOdom = pfilter->GetCarPostion();
-		Eigen::Vector3d curState = curOdom.head(3);
-
-		Eigen::Vector3d cur_position = curState + mOdometry.translation();
 		yaw = curOdom[StateMemberYaw] - 0.5 * EIGEN_PI;
-		if (yaw < 0) yaw = yaw + 2 * EIGEN_PI;
-
-		tool_t::UTMTransform::instance()->UTMtoLL(cur_position[1], cur_position[0], lat, lon);
-		timeStamp = pfilter->GetLastMeasurementTime();
-		printf("ekf_out:%lf,%.7f,%.7f,%f \r\n", pfilter->GetLastMeasurementTime(), lat, lon, yaw);
+		if (yaw < 0)
+			yaw = yaw + 2 * EIGEN_PI;
+		m_ENU.getLLA(curOdom[StateMemberX], curOdom[StateMemberY], curOdom[StateMemberZ], lat, lon, hei);
+		DFPrintf("ekf_out:%lf,%.7f,%.7f,%f \r\n", pfilter->GetLastMeasurementTime(), lat, lon, yaw);
+		ekfDataPtr ekfPtr = std::make_shared<ekfData>();
+		ekfPtr->timeStamp = pfilter->GetLastMeasurementTime();
+		ekfPtr->lat = lat;
+		ekfPtr->lon = lon;
+		ekfPtr->heading = yaw;
+		if (SAFE_CHECK(p_EKF_publisher))
+		{
+			p_EKF_publisher->Publisher(ekfPtr);
+		}
 	}
-
-#if MPU
 
 	void filterModule::PublisherTopic()
 	{
-
-
+		if (m_pVHandleImp != NULL)
+		{
+			p_EKF_publisher = m_pVHandleImp->Publisher<void, ekfDataPtr>("ekf");
+		}
 	}
 
 	void filterModule::SubscriberTopic()
 	{
 		m_pVHandleImp->Subscriber("GNSS", this, &filterModule::GNSSDataParse);
 		m_pVHandleImp->Subscriber("vehicle", this, &filterModule::vehicleDataParse);
+		m_pVHandleImp->Subscriber("lane", this, &filterModule::laneDataParse);
 	}
 
 	void filterModule::KTRun(void* arg)
@@ -190,51 +240,65 @@ namespace filter
 	void filterModule::GNSSDataParse(GNSSDataPtr gnssData)
 	{
 		double utmX, utmY, utmZ;
-		tool_t::UTMTransform::instance()->LLToUTM(gnssData->dlatitude, gnssData->dlongitude, utmX, utmY);
 		double heading = gnssData->heading;
 		heading = heading + 0.5 * EIGEN_PI;
-		if (heading > 2 * EIGEN_PI)  heading = heading - 2.0 * EIGEN_PI;
-		printf("heading %f \n", heading);
-		DFPrintf("ekf_in_gnss:%f,%f,%d,%d,%d,%.7f,%.7f,%f,%f,%f\n", gnssData->timeStamp, gnssData->iTOW, gnssData->fix_type, gnssData->RTKSatus, gnssData->numSV, gnssData->dlatitude, gnssData->dlongitude, gnssData->dheight, gnssData->heading, gnssData->fvelocity);
+		if (heading > 2 * EIGEN_PI)
+			heading = heading - 2.0 * EIGEN_PI;
+		DFPrintf("ekf_in_gnss:%f,%f,%d,%d,%d,%.7f,%.7f,%f,%f,%f,%f,%f,%f,%f\n", gnssData->timeStamp, gnssData->iTOW, gnssData->fix_type, gnssData->RTKSatus, gnssData->numSV, gnssData->dlatitude, gnssData->dlongitude, gnssData->dheight, gnssData->heading, gnssData->fvelocity, gnssData->vAcc, gnssData->hAcc, gnssData->headAcc, gnssData->sAcc);
 		if (pfilter->GetFilterStateInitial())
 		{
-			observeMessagePtr observe = std::make_shared<observeMessage>();
+			observedMessagePtr observe = std::make_shared<observedMessage>();
 			observe->id = 0;
 			observe->timestamp = gnssData->timeStamp;
-			observe->UTM = Eigen::Vector3d{ utmX, utmY, utmZ };
+			observe->LLA = Eigen::Vector3d{ gnssData->dlatitude, gnssData->dlongitude, gnssData->dheight };
 			observe->Vehicle = Eigen::Vector3d{ gnssData->fvelocity, 0, 0 };
 			observe->YPR = Eigen::Vector3d{ heading, 0, 0 };
 			pfilterQueue->push_back(observe);
 		}
 		else
 		{
-			mInitialMessage->v_observation.resize(4);
-			mInitialMessage->messageId = 0;
+			mInitialMessage->v_observation.resize(mStateSize);
 			mInitialMessage->timestamp = gnssData->timeStamp;
-			mInitialMessage->v_observation[mStateMemberX] = utmX;
-			mInitialMessage->v_observation[mStateMemberY] = utmY;
-			mInitialMessage->v_observation[mStateMemberYaw] = heading;
-			mInitialMessage->v_observation[mStateMemberVx] = gnssData->fvelocity;
+			m_ENU.setStart(gnssData->dlatitude, gnssData->dlongitude, gnssData->dheight);
+			double a, b, c;
+			m_ENU.getENU(gnssData->dlatitude, gnssData->dlongitude, gnssData->dheight, a, b, c);
+			mInitialMessage->v_observation[StateMemberX] = a;
+			mInitialMessage->v_observation[StateMemberY] = b;
+			mInitialMessage->v_observation[StateMemberZ] = c;
+			mInitialMessage->v_observation[StateMemberYaw] = heading;
+			mInitialMessage->v_observation[StateMemberVx] = gnssData->fvelocity;
 			bvalidInitial = true;
-			//std::cout<< mInitialMessage->v_observation <<std::endl;
 		}
 		return;
 	}
 
 	void filterModule::vehicleDataParse(vehicleDataPtr vehicleData)
 	{
-		DFPrintf("ekf_in_vel:%lf,%f \r\n", vehicleData->timeStamp, vehicleData->vehicle_v);
+		DFPrintf("ekf_in_vel:%lf,%f, \r\n", vehicleData->timeStamp, vehicleData->vehicle_v, vehicleData->vehicle_steer);
 		if (pfilter->GetFilterStateInitial())
 		{
-			observeMessagePtr observe = std::make_shared<observeMessage>();
+			observedMessagePtr observe = std::make_shared<observedMessage>();
 			observe->id = 2;
 			observe->timestamp = vehicleData->timeStamp;
 			observe->Vehicle = Eigen::Vector3d{ vehicleData->vehicle_v, 0, 0 };
-			//pfilterQueue->push_back(observe);
+			pfilterQueue->push_back(observe);
 		}
 		return;
 	}
 
+	void filterModule::laneDataParse(laneDataPtr laneData)
+	{
+		DFPrintf("ekf_in_lane:%lf,%lf,%lf \r\n", laneData->timeStamp, laneData->lat, laneData->lon);
+		if (pfilter->GetFilterStateInitial())
+		{
+			observedMessagePtr observe = std::make_shared<observedMessage>();
+			observe->id = 1;
+			observe->timestamp = laneData->timeStamp;
+			observe->LLA = Eigen::Vector3d{ laneData->lat, laneData->lon, laneData->height };
+			pfilterQueue->push_back(observe);
+		}
+		return;
+	}
 
 #else
 	void filterModule::setObserve(observedMessagePtr observe)
@@ -245,17 +309,19 @@ namespace filter
 		}
 		else
 		{
-			mInitialMessage->v_observation.resize(4);
+			mInitialMessage->v_observation.resize(mStateSize);
 			mInitialMessage->v_observation.setZero();
 			mInitialMessage->timestamp = observe->timestamp;
-			mInitialMessage->v_observation[StateMemberX] = observe->UTM[0];
-			mInitialMessage->v_observation[StateMemberY] = observe->UTM[1];
+			m_ENU.setStart(observe->LLA[0], observe->LLA[1], observe->LLA[2]);
+			double a, b, c;
+			m_ENU.getENU(observe->LLA[0], observe->LLA[1], observe->LLA[2], a, b, c);
+			mInitialMessage->v_observation[StateMemberX] = a;
+			mInitialMessage->v_observation[StateMemberY] = b;
+			mInitialMessage->v_observation[StateMemberZ] = c;
 			mInitialMessage->v_observation[StateMemberYaw] = observe->YPR[0];
 			mInitialMessage->v_observation[StateMemberVx] = observe->Vehicle[0];
 			bvalidInitial = true;
 		}
-
-
 		ModuleParse();
 
 		return;

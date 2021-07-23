@@ -34,7 +34,7 @@ public:
 		return ;
 	}
 
-	double* getLLA(const double& a, const double& b, const float& c)
+	double* getLLA(const double& a, const double& b, const float& c ,double& i, double& j,float& k )
 	{
 		double m[3], n[3], r[3], lla[3];
 		r[0] = a;
@@ -46,8 +46,9 @@ public:
 		n[1] = n[1] + m_ecef_ref[1];
 		n[2] = n[2] + m_ecef_ref[2];
 		ecef2pos(n, lla);
-		lla[0] = lla[0] * 180 / PI;
-		lla[1] = lla[1] * 180 / PI;
+		i = lla[0] * 180 / PI;
+		j = lla[1] * 180 / PI;
+		k = lla[2];
 		return lla;
 	}
 

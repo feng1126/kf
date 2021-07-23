@@ -84,6 +84,9 @@ namespace filter
         int  mStateSize;
 
         float m_steer_angle;
+
+        void update_gps(Eigen::Vector3d pos, Eigen::Vector3d ypr, Eigen::VectorXd cov);
+        void update_vehicle(Eigen::Vector3d vehicle);
     };
 }
 #endif

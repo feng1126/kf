@@ -22,11 +22,13 @@ namespace filter
         mState.resize(mStateSize);
         identity_.resize(mStateSize, mStateSize);
         reset();
-
-        mProcessNoiseCovariance(StateMemberX, StateMemberX) = 0.05;
-        mProcessNoiseCovariance(StateMemberY, StateMemberY) = 0.05;
-        mProcessNoiseCovariance(StateMemberYaw, StateMemberYaw) = 0.05;
-        mProcessNoiseCovariance(StateMemberVx, StateMemberVx) = 0.05;
+        mProcessNoiseCovariance(StateMemberX, StateMemberX) = 0.005;
+        mProcessNoiseCovariance(StateMemberY, StateMemberY) = 0.005;
+        mProcessNoiseCovariance(StateMemberZ, StateMemberZ) = 0.005;
+        mProcessNoiseCovariance(StateMemberYaw, StateMemberYaw) = 0.005;
+        mProcessNoiseCovariance(StateMemberPitch, StateMemberPitch) = 0.005;
+        mProcessNoiseCovariance(StateMemberRoll, StateMemberRoll) = 0.005;
+        mProcessNoiseCovariance(StateMemberVx, StateMemberVx) = 0.005;
 
     }
 
@@ -40,27 +42,29 @@ namespace filter
         mLastMeasurementTime = message->timestamp;
         mFirstStatePosition[StateMemberX] = message->v_observation[StateMemberX];
         mFirstStatePosition[StateMemberY] = message->v_observation[StateMemberY];
-        mOdometryCoordinate = YPR2Quaterniond(message->v_observation[StateMemberYaw], 0, 0);
+        mFirstStatePosition[StateMemberZ] = message->v_observation[StateMemberZ];
+        mOdometryCoordinate = YPR2Quaterniond(message->v_observation[StateMemberYaw], message->v_observation[StateMemberPitch], message->v_observation[StateMemberRoll]);
         mState[StateMemberVx] = message->v_observation[StateMemberVx];
         mState[StateMemberYaw] = message->v_observation[StateMemberYaw];
+        mState[StateMemberPitch] = message->v_observation[StateMemberPitch];
+        mState[StateMemberRoll] = message->v_observation[StateMemberRoll];
         mInitialMeasurementState = true;
         mOdometry = Eigen::Isometry3d::Identity();
         mOdometry.rotate(mOdometryCoordinate.toRotationMatrix());
         mOdometry.pretranslate(mFirstStatePosition);
         mOdometryInv = mOdometry.inverse();
-
-
     }
 
     void filterEKF::predict(double dtime)
     {
         const double delta_sec = dtime - GetLastMeasurementTime();
         double yaw = mState(StateMemberYaw);
+        double pitch = mState(StateMemberPitch);
         double x_vel = mState(StateMemberVx);
 
         mTransferFunction(StateMemberX, StateMemberVx) = std::cos(yaw) * delta_sec;
         mTransferFunction(StateMemberY, StateMemberVx) = std::sin(yaw) * delta_sec;
-        mState[StateMemberYaw] = mState[StateMemberYaw] + x_vel * delta_sec * std::tan(m_steer_angle) / 4.0;
+        //mState[StateMemberYaw] = mState[StateMemberYaw] + x_vel * delta_sec * std::tan(m_steer_angle) / 4.0;
 
         mTransferFunctionjacobian = mTransferFunction;
         mTransferFunctionjacobian(StateMemberX, StateMemberYaw) = -x_vel * std::sin(yaw)  * delta_sec;
@@ -78,6 +82,65 @@ namespace filter
         {
             mLastMeasurementTime = dtime;
         }
+    }
+
+
+    void filterEKF::update_gps(Eigen::Vector3d pos, Eigen::Vector3d ypr, Eigen::VectorXd cov)
+    {
+
+        size_t update_size = 6;
+        Eigen::MatrixXd H(update_size, mState.rows());
+        H.setIdentity();
+        H.block(0, 0, 3, 3) = Eigen::Matrix3d::Identity();
+        H.block(3, 3, 3, 3) = Eigen::Matrix3d::Identity();
+        Eigen::MatrixXd R(update_size, update_size);
+        R.setIdentity();
+        for (int i = 0; i < update_size; i++)
+        {
+            R(i, i) = 1;
+
+        }
+
+        Eigen::MatrixXd K = mEstimateErrorCovariance * H.transpose() * (H * mEstimateErrorCovariance * H.transpose() + R).inverse();
+
+        Eigen::VectorXd innovationSubset(update_size);  // z - Hx
+        innovationSubset[0] = pos[0] - mState[StateMemberX];
+        innovationSubset[1] = pos[1] - mState[StateMemberY];
+        innovationSubset[2] = pos[2] - mState[StateMemberZ];
+        innovationSubset[3] = ypr[0] - mState[StateMemberYaw];
+        innovationSubset[4] = ypr[1] - mState[StateMemberPitch];
+        innovationSubset[5] = ypr[2] - mState[StateMemberRoll];
+
+
+        while (innovationSubset(3) < -PI)
+        {
+            innovationSubset(3) += TAU;
+        }
+
+        while (innovationSubset(3) > PI)
+        {
+            innovationSubset(3) -= TAU;
+        }
+        mState.noalias() += K * innovationSubset;
+        mEstimateErrorCovariance = (identity_ - K * H) * mEstimateErrorCovariance; //;* (identity_ - K * H).inverse() + K * R * K.inverse() ;//(I -KH)P(I - KH)' + KRK'
+    }
+
+    void filterEKF::update_vehicle(Eigen::Vector3d vehicle)
+    {
+        size_t update_size = 3;
+        Eigen::MatrixXd H = Eigen::MatrixXd::Zero(update_size, mState.rows());
+        H.block(0, 6, 3, 3) = Eigen::Matrix3d::Identity();
+        Eigen::MatrixXd R(update_size, update_size);
+        R.block(0, 0, 3, 3) = Eigen::Matrix3d::Identity() * 0.001;
+        Eigen::MatrixXd K = mEstimateErrorCovariance * H.transpose() * (H * mEstimateErrorCovariance * H.transpose() + R).inverse();
+
+        Eigen::VectorXd innovationSubset(update_size);  // z - Hx
+        innovationSubset[0] = vehicle[0] - mState[StateMemberVx];
+        innovationSubset[1] = vehicle[1] - mState[StateMemberVy];
+        innovationSubset[2] = vehicle[2] - mState[StateMemberVz];
+
+        mState = mState + K * innovationSubset;
+        mEstimateErrorCovariance = (identity_ - K * H) * mEstimateErrorCovariance;
     }
 
     void filterEKF::correction(const std::shared_ptr<filterMessage>& message)
@@ -165,7 +228,6 @@ namespace filter
            //(I -KH)*P
         mEstimateErrorCovariance.noalias() = (identity_ - kalmanGainSubset * statetoMeasurementSubset) * mEstimateErrorCovariance * (identity_ - kalmanGainSubset * statetoMeasurementSubset).transpose() + kalmanGainSubset * measurementCovarianceSubset * kalmanGainSubset.transpose();
         wrapStateAngles();
-
 
     }
 }

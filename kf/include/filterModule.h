@@ -77,18 +77,8 @@ namespace filter
         int  mStateMemberX;
         int  mStateMemberY;
         int  mStateMemberZ;
-        int  mStateMemberRoll;
-        int  mStateMemberPitch;
-        int  mStateMemberYaw;
-        int  mStateMemberVx;
-        int  mStateMemberVy;
-        int  mStateMemberVz;
-        int  mStateMemberVroll;
-        int  mStateMemberVpitch;
-        int  mStateMemberVyaw;
-        int  mStateMemberAccX;
-        int  mStateMemberAccY;
-        int  mStateMemberAccZ;
+
+        ENU m_ENU;
 
     };
 

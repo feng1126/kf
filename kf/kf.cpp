@@ -236,7 +236,7 @@ int main()
 			//if (heading >  EIGEN_PI)  heading = heading -  2.0 * EIGEN_PI;
 			if (heading > 2 * EIGEN_PI)  heading = heading - 2.0 * EIGEN_PI;
 
-			//printf("%lf,%lf,%f,%f \n", lat, lon, alt, heading);
+			//printf("%lf,%lf,%f,%f,%f \n", lat, lon, alt, heading, Vehicle->[0]);
 			filter::observedMessagePtr filterObserve_data = std::make_shared<filter::observedMessage>();
 			filterObserve_data->timestamp = timestamp;
 			double utm_x, utm_y;
@@ -245,7 +245,7 @@ int main()
 			filterObserve_data->LLA = Eigen::Vector3d(lat, lon, alt);
 			filterObserve_data->YPR = Eigen::Vector3d(heading, 0, 0);
 			filterObserve_data->Vehicle = Eigen::Vector3d(stod(logData[9]), 0, 0);
-			filterObserve_data->cov = Eigen::Vector4d(stod(logData[10]), stod(logData[11]), stod(logData[12]), stod(logData[13]));
+			filterObserve_data->cov = Eigen::Vector4d(stod(logData[11]), stod(logData[10]), stod(logData[12]), stod(logData[13]));
 			filterObserve_data->id = 0;
 			count ++ ;
 			//if (count == 5)
@@ -335,11 +335,17 @@ int main()
 			//std::cout << "dt : " << time << std::endl;
 		//	dtVector.push_back(time);
 		//}
+		if (filterObserves[i]->id == 0)
+		{
+
+		printf("ekf_in:%lf,%lf,%f,%f,%f \n", filterObserves[i]->LLA[0], filterObserves[i]->LLA[1], filterObserves[i]->YPR[0], filterObserves[i]->Vehicle[0]);
+		}
+
 
 			
 		double timestamp, lat, lon, yaw;
 		EKF.setObserve(filterObserves[i]);
-		//if (filterObserves[i]->id == 1)
+		if (filterObserves[i]->id == 0)
 		{
 			EKF.GetOdom(timestamp, lat, lon, yaw);
 			//std::cout << std::to_string(timestamp) << "," << std::to_string(lat) << "," << std::to_string(lon) << "," << std::to_string(yaw) << std::endl;
