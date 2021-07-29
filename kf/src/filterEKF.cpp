@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-07-02 10:01:50
- * @LastEditTime: 2021-07-02 14:41:28
+ * @LastEditTime: 2021-07-28 16:10:24
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \code\src\fusionalgorithm\filterEKF.cpp
@@ -36,7 +36,8 @@ namespace filter
     {
 
     }
-    //EKF³õÊ¼»¯EKFÄ£¿é³õÊ¼×ø±ê
+
+    //EKFï¿½ï¿½Ê¼ï¿½ï¿½EKFÄ£ï¿½ï¿½ï¿½Ê¼ï¿½ï¿½ï¿½ï¿½
     void filterEKF::SetFilterStateInitial(const std::shared_ptr<filterMessage>& message)
     {
         mLastMeasurementTime = message->timestamp;
@@ -97,7 +98,7 @@ namespace filter
         R.setIdentity();
         for (int i = 0; i < update_size; i++)
         {
-            R(i, i) = 1;
+            R(i, i) = cov[i];
 
         }
 

@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-07-26 15:16:42
+ * @LastEditTime: 2021-07-28 16:13:49
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \code\include\fusionalgorithm\enu.h
+ */
 #pragma once
 #include <math.h>
 
@@ -10,7 +18,6 @@ public:
 	ENU();
 	void setStart(const double& a, const double& b, const float& c)
 	{
-		double m[3], n[3];
 		m_lla_ref[0] = a / 180.0 * PI;
 		m_lla_ref[1] = b / 180.0 * PI;
 		m_lla_ref[2] = c;
@@ -34,9 +41,9 @@ public:
 		return ;
 	}
 
-	double* getLLA(const double& a, const double& b, const float& c ,double& i, double& j,float& k )
+	void getLLA(const double& a, const double& b, const float& c ,double& i, double& j,float& k )
 	{
-		double m[3], n[3], r[3], lla[3];
+		double n[3], r[3], lla[3];
 		r[0] = a;
 		r[1] = b;
 		r[2] = c;
@@ -49,7 +56,7 @@ public:
 		i = lla[0] * 180 / PI;
 		j = lla[1] * 180 / PI;
 		k = lla[2];
-		return lla;
+		return ;
 	}
 
 private:
@@ -60,6 +67,5 @@ private:
 	void xyz2enu(const double* pos, double* E);
 	void ecef2enu(const double* pos, const double* r, double* e);
 	void enu2ecef(const double* pos, const double* e, double* r);
-	void matmul(const char* tr, int n, int k, int m, double alpha,
-		const double* A, const double* B, double beta, double* C);
+	void matmul(const char* tr, int n, int k, int m, double alpha,const double* A, const double* B, double beta, double* C);
 };

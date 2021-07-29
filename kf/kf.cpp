@@ -5,10 +5,10 @@
 #include <vector>
 #include <fstream>
 #include "filterModule.h"
-#include "UTMTran.h"
 #include "matplotlibcpp.h"
 #include <algorithm>
 #include "enu.h"
+#include "UTMTran.h"
 
 std::vector<std::string> splitWithSymbol(const std::string& strs, const std::string& splitWithSymbol)
 {
@@ -241,11 +241,15 @@ int main()
 			filterObserve_data->timestamp = timestamp;
 			double utm_x, utm_y;
 			tool_t::UTMTransform::instance()->LLToUTM(lat, lon, utm_x, utm_y);
-			filterObserve_data->UTM = Eigen::Vector3d(utm_x, utm_y, alt);
-			filterObserve_data->LLA = Eigen::Vector3d(lat, lon, alt);
-			filterObserve_data->YPR = Eigen::Vector3d(heading, 0, 0);
-			filterObserve_data->Vehicle = Eigen::Vector3d(stod(logData[9]), 0, 0);
-			filterObserve_data->cov = Eigen::Vector4d(stod(logData[11]), stod(logData[10]), stod(logData[12]), stod(logData[13]));
+			filterObserve_data->LLA[0] = lat;
+			filterObserve_data->LLA[1] = lon;
+			filterObserve_data->LLA[2] = alt;
+			filterObserve_data->YPR[0] = heading;
+			filterObserve_data->Vehicle[0] = stod(logData[9]);
+			filterObserve_data->cov[0] = stod(logData[11]);
+			filterObserve_data->cov[1] = stod(logData[10]);
+			filterObserve_data->cov[2] = stod(logData[12]);
+			filterObserve_data->cov[3] = stod(logData[13]);
 			filterObserve_data->id = 0;
 			count ++ ;
 			//if (count == 5)
@@ -290,7 +294,7 @@ int main()
 			double timestamp = stod(logData[0]);
 			filter::observedMessagePtr filterObserve_data = std::make_shared<filter::observedMessage>();
 			filterObserve_data->timestamp = timestamp;
-			filterObserve_data->Vehicle = Eigen::Vector3d(stod(logData[1]), 0, 0);
+			filterObserve_data->Vehicle[0] = stod(logData[1]);
 			filterObserve_data->steerAngle = 1;
 			filterObserve_data->id = 2;
 			filterObserves.push_back(filterObserve_data);

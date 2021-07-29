@@ -1,7 +1,7 @@
 /*
  * @Author: your name
  * @Date: 2021-05-12 09:25:19
- * @LastEditTime: 2021-07-01 16:28:26
+ * @LastEditTime: 2021-07-28 08:39:51
  * @LastEditors: Please set LastEditors
  * @Description: In User Settings Edit
  * @FilePath: \code\include\fusionalgorithm\filterModule.h
@@ -16,9 +16,9 @@
 
 #include "filterQueue.h"
 #include "filterEKF.h"
-#include "filterUKF.h"
 
-#if MPU
+
+#if MPU 
 #include "KTBaseModule.h"
 #include "VHandleImp.h"
 #include "KTRunable.h"
@@ -59,6 +59,9 @@ namespace filter
         task_t::VHandle* pHandle;
         void GNSSDataParse(GNSSDataPtr gnssData);
         void vehicleDataParse(vehicleDataPtr vehicleData);
+        void laneDataParse(laneDataPtr laneData);
+        void imuDataParse(IMUDataPtr imuData);
+        task_t::VPublisher<void, ekfDataPtr> *p_EKF_publisher;
 
 #endif
         filterQueue* pfilterQueue;
@@ -69,15 +72,11 @@ namespace filter
         Eigen::Isometry3d mOdometry;
 
 
-        MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& UTM, const Eigen::Vector3d& YPR, const Eigen::Vector3d& Vehicle, const Eigen::Vector4d& cov);
-        MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& UTM, const Eigen::Vector3d& YPR);
-        MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& Vehicle);
+        // MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& UTM, const Eigen::Vector3d& YPR, const Eigen::Vector3d& Vehicle, const Eigen::Vector4d& cov);
+        // MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& UTM, const Eigen::Vector3d& YPR);
+        // MeasurementPtr tranform(const double& timeStamp, const Eigen::Vector3d& Vehicle);
 
         int  mStateSize;
-        int  mStateMemberX;
-        int  mStateMemberY;
-        int  mStateMemberZ;
-
         ENU m_ENU;
 
     };

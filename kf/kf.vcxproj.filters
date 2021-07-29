@@ -33,13 +33,13 @@
     <ClCompile Include="src\filterQueue.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="src\filterUKF.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="src\UTMTran.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="src\enu.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="src\filterUKF.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>

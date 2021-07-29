@@ -1,3 +1,11 @@
+/*
+ * @Author: your name
+ * @Date: 2021-07-27 16:04:34
+ * @LastEditTime: 2021-07-27 16:04:35
+ * @LastEditors: Please set LastEditors
+ * @Description: In User Settings Edit
+ * @FilePath: \code\include\fusionalgorithm\filterUKF.h
+ */
 //
 // Created by niew on 2021/02/22.
 //  UKF滤波算法
@@ -27,22 +35,6 @@ namespace filter
 		std::vector<double> mCovarWeights;
 		Eigen::MatrixXd mWeightedCovarSqrt;
 		int  mSigmaCount;
-		int  mStateMemberX;
-		int  mStateMemberY;
-		int  mStateMemberZ;
-		int  mStateMemberRoll;
-		int  mStateMemberPitch;
-		int  mStateMemberYaw;
-		int  mStateMemberVx;
-		int  mStateMemberVy;
-		int  mStateMemberVz;
-		int  mStateMemberVroll;
-		int  mStateMemberVpitch;
-		int  mStateMemberVyaw;
-		int  mStateMemberAccX;
-		int  mStateMemberAccY;
-		int  mStateMemberAccZ;
-
 
 	};
 }

@@ -11,6 +11,7 @@ double ENU::dot(const double* a, const double* b, int n)
     return c;
 }
 
+
 void ENU::pos2ecef(const double* pos, double* r)
 {
     double sinp = sin(pos[0]), cosp = cos(pos[0]), sinl = sin(pos[1]), cosl = cos(pos[1]);
