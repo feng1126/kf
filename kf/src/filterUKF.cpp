@@ -16,17 +16,11 @@ namespace filter
         identity_.resize(mStateSize, mStateSize);
         reset();
 
-        mStateMemberX = 0;
-        mStateMemberY = 1;
-        mStateMemberYaw = 2;
-        mStateMemberVx = 3;
 
-
-
-        mProcessNoiseCovariance(mStateMemberX, mStateMemberX) = 0.05;
-        mProcessNoiseCovariance(mStateMemberY, mStateMemberY) = 0.05;
-        mProcessNoiseCovariance(mStateMemberYaw, mStateMemberYaw) = 0.008;
-        mProcessNoiseCovariance(mStateMemberVx, mStateMemberVx) = 0.05;
+        mProcessNoiseCovariance(StateMemberX, StateMemberX) = 0.05;
+        mProcessNoiseCovariance(StateMemberY, StateMemberY) = 0.05;
+        mProcessNoiseCovariance(StateMemberYaw, StateMemberYaw) = 0.008;
+        mProcessNoiseCovariance(StateMemberVx, StateMemberVx) = 0.05;
 
         mSigmaCount = 2 * mStateSize + 1;
         mSigmaPoints.resize(mStateSize, mSigmaCount);
@@ -60,11 +54,11 @@ namespace filter
     {
 
         const double delta = dtime - GetLastMeasurementTime();
-        double yaw = mState(mStateMemberYaw);
+        double yaw = mState(StateMemberYaw);
 
         // 根据车辆运动学计算转移状态
-        mTransferFunction(mStateMemberX, mStateMemberVx) = std::cos(yaw) * delta;
-        mTransferFunction(mStateMemberY, mStateMemberVx) = std::sin(yaw) * delta;
+        mTransferFunction(StateMemberX, StateMemberVx) = std::cos(yaw) * delta;
+        mTransferFunction(StateMemberY, StateMemberVx) = std::sin(yaw) * delta;
 
         //通过LL分解计算均值;
         Eigen::MatrixXd temp_matrix = (mStateSize + mLambda) * mEstimateErrorCovariance;
@@ -192,7 +186,7 @@ namespace filter
         // Wrap angles in the innovation
         for (size_t i = 0; i < update_size; ++i)
         {
-            if (update_indices[i] == mStateMemberYaw)
+            if (update_indices[i] == StateMemberYaw)
             {
                 while (innovationSubset(i) < -PI)
                 {
@@ -217,10 +211,10 @@ namespace filter
     {
 
         mLastMeasurementTime = message->timestamp;
-        mFirstStatePosition[mStateMemberX] = message->v_observation[mStateMemberX];
-        mFirstStatePosition[mStateMemberY] = message->v_observation[mStateMemberY];
-        mOdometryCoordinate = YPR2Quaterniond(message->v_observation[mStateMemberYaw], 0, 0);
-        mState[mStateMemberVx] = message->v_observation[mStateMemberVx];
+        mFirstStatePosition[StateMemberX] = message->v_observation[StateMemberX];
+        mFirstStatePosition[StateMemberY] = message->v_observation[StateMemberY];
+        mOdometryCoordinate = YPR2Quaterniond(message->v_observation[StateMemberYaw], 0, 0);
+        mState[StateMemberVx] = message->v_observation[StateMemberVx];
         mInitialMeasurementState = true;
         mOdometry = Eigen::Isometry3d::Identity();
         mOdometry.rotate(mOdometryCoordinate.toRotationMatrix());
